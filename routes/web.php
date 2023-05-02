@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Telegram\WebClient\TelegramConnect;
+use App\Http\Controllers\TelegramParser;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,4 +18,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('login', [TelegramConnect::class, 'index'])->name('connect-telegram');
+Route::get('login', [TelegramParser::class, 'index'])->name('connect-telegram');

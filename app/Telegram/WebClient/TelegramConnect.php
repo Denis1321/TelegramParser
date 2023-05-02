@@ -6,7 +6,7 @@ use AurimasNiekis\FFI;
 
 class TelegramConnect
 {
-    private static string $tdlib_path = 'tdjson.dll';
+//    private static string $tdlib_path = 'tdjson.dll';
     private static int $api_id = 28582477;
     private static string $api_hash = '1491ae4160f5128eeb18c932c8d22743';
     private string $phone;
@@ -14,7 +14,7 @@ class TelegramConnect
     private $answer = true;
 
     public function __construct(){
-        $this->client = new FFI\TdLib(self::$tdlib_path);
+        $this->client = new FFI\TdLib();//pass custom path to tdjson library
 
         if ($this->authorize_state()){
             while (($this->answer = $this->iteratorAnswer()) !== null){
