@@ -4,8 +4,69 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8e6e7fe5fd9d19060838a2fee2857ca4",
+    "content-hash": "a12419e9c49c5442379da8330e2d396c",
     "packages": [
+        {
+            "name": "aurimasniekis/ffi-tdlib",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/aurimasniekis/php-ffi-tdlib.git",
+                "reference": "8938842390a6753f55346208a109f5142df374b1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/aurimasniekis/php-ffi-tdlib/zipball/8938842390a6753f55346208a109f5142df374b1",
+                "reference": "8938842390a6753f55346208a109f5142df374b1",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ffi": "*",
+                "ext-json": "*",
+                "php": "^7.4||^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "AurimasNiekis\\FFI\\": "src"
+                },
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Aurimas Niekis",
+                    "email": "aurimas@niekis.lt",
+                    "homepage": "https://aurimas.niekis.lt"
+                }
+            ],
+            "description": "A PHP FFI integration with TdLib via JSON interface",
+            "homepage": "https://github.com/aurimasniekis/php-ffi-tdlib",
+            "keywords": [
+                "ffi",
+                "td",
+                "tdlib",
+                "telegram"
+            ],
+            "support": {
+                "issues": "https://github.com/aurimasniekis/php-ffi-tdlib",
+                "source": "https://github.com/aurimasniekis/php-ffi-tdlib"
+            },
+            "time": "2020-04-04T11:21:02+00:00"
+        },
         {
             "name": "brick/math",
             "version": "0.11.0",
@@ -7824,7 +7885,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "aurimasniekis/ffi-tdlib": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
