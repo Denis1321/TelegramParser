@@ -19,3 +19,5 @@ Route::get('/', function () {
 });
 
 Route::get('login', [TelegramParser::class, 'index'])->name('connect-telegram');
+Route::post('sendPhone', [TelegramParser::class, 'store']);
+Route::post('sendCode', [TelegramParser::class, 'store']);

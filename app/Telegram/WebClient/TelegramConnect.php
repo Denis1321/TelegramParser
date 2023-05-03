@@ -6,7 +6,7 @@ use AurimasNiekis\FFI;
 
 class TelegramConnect
 {
-//    private static string $tdlib_path = 'tdjson.dll';
+    private static string $tdlib_path = 'C:\OSPanel\domains\Telegram-Parse\vendor\td\build\Release\tdjson.dll';
     private static int $api_id = 28582477;
     private static string $api_hash = '1491ae4160f5128eeb18c932c8d22743';
     private string $phone;
@@ -14,19 +14,23 @@ class TelegramConnect
     private $answer = true;
 
     public function __construct(){
-        $this->client = new FFI\TdLib();//pass custom path to tdjson library
+        $this->client = new FFI\TdLib(self::$tdlib_path);//pass custom path to tdjson library
+    }
 
+    public function connect()
+    {
         if ($this->authorize_state()){
             while (($this->answer = $this->iteratorAnswer()) !== null){
                 if ($this->check_authorize()){
-                    $this->log_in();
+                    return view('components.input-phone');
                 }
                 else{
                     $this->log_out();
-                    $this->log_in();
+                    return view('components.input-phone');
                 }
             }
         }
+        return view('welcome');
     }
 
     private function authorize_state(): bool{
@@ -57,33 +61,39 @@ class TelegramConnect
     }
 
     private function check_authorize(): bool{
+        $return = false;
         foreach ($this->answer = $this->iteratorAnswer() as $answer){
             if ($answer['@type'] === 'updateAuthorizationState' && $answer['authorization_state']['@type'] === 'authorizationStateWaitPhoneNumber'){
-                return true;
+                $return = true;
             }
             if ($answer['@type'] === 'updateAuthorizationState' && $answer['authorization_state']['@type'] === 'authorizationStateReady'){
-                return false;
+                $return = false;
             }
         }
-        return false;
+        return $return;
     }
 
-    private function log_in(): bool{
-        echo 'input your phone number:' . PHP_EOL;
-        $phone = '79831527628';
-        $this->client->send([
-            '@type' => 'setAuthenticationPhoneNumber',
-            'phone_number' => $phone,
-        ]);
-        echo 'input send code:' . PHP_EOL;
-//        $code = readline();
-        $this->client->send([
-            '@type' => 'checkAuthenticationCode',
-            'code' => $code,
-        ]);
+    public function log_in(string $phone, string $code): bool{
+        if ($phone){
+            $this->client->send([
+                '@type' => 'setAuthenticationPhoneNumber',
+                'phone_number' => $phone,
+            ]);
 
-        foreach ($this->answer = $this->iteratorAnswer() as $answer){
-            if ($some = 1){return true;}
+            foreach ($this->answer = $this->iteratorAnswer() as $answer){
+                if ($some = 1){return true;}
+            }
+        }
+
+        if ($code){
+            $this->client->send([
+                '@type' => 'checkAuthenticationCode',
+                'code' => $code,
+            ]);
+
+            foreach ($this->answer = $this->iteratorAnswer() as $answer){
+                if ($some = 1){return true;}
+            }
         }
         return false;
     }
@@ -93,10 +103,11 @@ class TelegramConnect
             '@type' => 'logOut',
         ]);
 
+        $return = false;
         foreach ($this->answer = $this->iteratorAnswer() as $answer){
-            if ($some = 1){return true;}
+            if ($some = 1){$return = true;}
         }
-        return false;
+        return $return;
     }
     private function iteratorAnswer(): iterable{
         while (($iterate = $this->client->receive(2)) != null)
