@@ -6,7 +6,7 @@ use AurimasNiekis\FFI;
 
 class TelegramConnect
 {
-    private static string $tdlib_path = 'C:\OSPanel\domains\Telegram-Parse\vendor\td\build\Release\tdjson.dll';
+//    private static string $tdlib_path = 'tdjson.dll';
     private static int $api_id = 28582477;
     private static string $api_hash = '1491ae4160f5128eeb18c932c8d22743';
     private string $phone;
@@ -14,16 +14,16 @@ class TelegramConnect
     private $answer = true;
 
     public function __construct(){
-        $this->client = new FFI\TdLib(self::$tdlib_path);//pass custom path to tdjson library
+        $this->client = new FFI\TdLib();//pass custom path to tdjson library
 
         if ($this->authorize_state()){
             while (($this->answer = $this->iteratorAnswer()) !== null){
                 if ($this->check_authorize()){
-//                    $this->log_in();
+                    $this->log_in();
                 }
                 else{
                     $this->log_out();
-//                    $this->log_in();
+                    $this->log_in();
                 }
             }
         }
@@ -68,28 +68,23 @@ class TelegramConnect
         return false;
     }
 
-    private function log_in(string $phone, string $code): bool{
-        if ($phone){
-            $this->client->send([
-                '@type' => 'setAuthenticationPhoneNumber',
-                'phone_number' => $phone,
-            ]);
+    private function log_in(): bool{
+        echo 'input your phone number:' . PHP_EOL;
+        $phone = '79831527628';
+        $this->client->send([
+            '@type' => 'setAuthenticationPhoneNumber',
+            'phone_number' => $phone,
+        ]);
+        echo 'input send code:' . PHP_EOL;
+//        $code = readline();
+        $this->client->send([
+            '@type' => 'checkAuthenticationCode',
+            'code' => $code,
+        ]);
 
-            foreach ($this->answer = $this->iteratorAnswer() as $answer){
-                if ($some = 1){return true;}
-            }
+        foreach ($this->answer = $this->iteratorAnswer() as $answer){
+            if ($some = 1){return true;}
         }
-        if ($code){
-            $this->client->send([
-                '@type' => 'checkAuthenticationCode',
-                'code' => $code,
-            ]);
-
-            foreach ($this->answer = $this->iteratorAnswer() as $answer){
-                if ($some = 1){return true;}
-            }
-        }
-
         return false;
     }
 
