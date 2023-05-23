@@ -18,6 +18,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('login', [TelegramParser::class, 'index'])->name('connect-telegram');
+Route::get('login', function (Request $request){
+    return view('components.input-phone');
+})->name('input-login');
+
+Route::get('sendCode', function (Request $request){
+    return view('components.input-code');
+})->name('sendCode');
+
+//Route::get('login', [TelegramParser::class, 'index'])->name('connect-telegram');
 Route::post('sendPhone', [TelegramParser::class, 'store']);
 Route::post('sendCode', [TelegramParser::class, 'store']);
+
+Route::get('parse', [TelegramParser::class,'parseTiksanAuto']);

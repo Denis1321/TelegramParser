@@ -3,6 +3,7 @@
 namespace App\Telegram\WebClient;
 
 use AurimasNiekis\FFI;
+use Illuminate\Support\Facades\Auth;
 
 class TelegramConnect
 {
@@ -19,13 +20,13 @@ class TelegramConnect
 
     public function connect()
     {
-        if ($this->authorize_state()){
+        if ($this->authorizeState()){
             while (($this->answer = $this->iteratorAnswer()) !== null){
-                if ($this->check_authorize()){
+                if ($this->checkAuthorize()){
                     return view('components.input-phone');
                 }
                 else{
-                    $this->log_out();
+                    $this->logOut();
                     return view('components.input-phone');
                 }
             }
@@ -33,7 +34,7 @@ class TelegramConnect
         return view('welcome');
     }
 
-    private function authorize_state(): bool{
+    private function authorizeState(): bool{
         foreach ($this->answer = $this->iteratorAnswer() as $answer){
             if ($answer['@type'] === 'updateAuthorizationState'){
                 $this->client->send([
@@ -60,7 +61,7 @@ class TelegramConnect
         return false;
     }
 
-    private function check_authorize(): bool{
+    private function checkAuthorize(): bool{
         $return = false;
         foreach ($this->answer = $this->iteratorAnswer() as $answer){
             if ($answer['@type'] === 'updateAuthorizationState' && $answer['authorization_state']['@type'] === 'authorizationStateWaitPhoneNumber'){
@@ -73,32 +74,47 @@ class TelegramConnect
         return $return;
     }
 
-    public function log_in(string $phone, string $code): bool{
-        if ($phone){
-            $this->client->send([
-                '@type' => 'setAuthenticationPhoneNumber',
-                'phone_number' => $phone,
-            ]);
+    /**
+     * @param \App\Models\User $user
+     * @param string $code
+     * @return bool
+     * @throws \JsonException
+     */
+    public function logIn(\App\Models\User $user, string $code): bool{
+        if ($user->phone){
+            $this->authorizeState();
+            if ($this->checkAuthorize()){
+                $this->client->send([
+                    '@type' => 'setAuthenticationPhoneNumber',
+                    'phone_number' => $user->phone,
+                ]);
 
-            foreach ($this->answer = $this->iteratorAnswer() as $answer){
-                if ($some = 1){return true;}
-            }
-        }
+                foreach ($this->answer = $this->iteratorAnswer() as $answer){
+                    if ($answer['@type'] === 'updateAuthorizationState'
+                        && $answer['authorization_state']['@type'] === 'authorizationStateWaitCode'
+                        && $user->phone === $answer['authorization_state']['code_info']['phone_number']){
+                        break;
+                    }
+                }
+                if ($code){
+                    $this->client->send([
+                        '@type' => 'checkAuthenticationCode',
+                        'code' => $code,
+                    ]);
 
-        if ($code){
-            $this->client->send([
-                '@type' => 'checkAuthenticationCode',
-                'code' => $code,
-            ]);
-
-            foreach ($this->answer = $this->iteratorAnswer() as $answer){
-                if ($some = 1){return true;}
+                    foreach ($this->answer = $this->iteratorAnswer() as $answer){
+                        $some = 0;
+                        if ($some == 1){
+                            return true;
+                        }
+                    }
+                }
             }
         }
         return false;
     }
 
-    private function log_out(): bool{
+    private function logOut(): bool{
         $this->client->send([
             '@type' => 'logOut',
         ]);
@@ -108,6 +124,69 @@ class TelegramConnect
             if ($some = 1){$return = true;}
         }
         return $return;
+    }
+
+    public function parseTiksanAuto(){
+        $chat = -1001549973899;//TIKSAN AUTO +7 (391) 986-77- 23
+        $test_supergroup = 1549973899;
+        $members = [];
+        $member_count = 0;
+        $offset = 0;
+        while ($offset <= $member_count) {
+            $this->client->send([
+                '@type' => 'getSupergroupMembers',
+                'supergroup_id' => $test_supergroup,
+                'limit' => 200,
+                'filter' => [
+                    '@type' => 'supergroupMembersFilterSearch',
+                    'query' => '%a'
+                ],
+            ]);
+//            $users = [];
+
+            foreach ($this->iteratorAnswer() as $answer) {
+//                if ($answer['@type'] == 'updateUser'){
+//                    if ($answer['user']['@type'] == 'user'){
+//                        $users[$answer['user']['usernames']['active_usernames'][0]]['id'] = $answer['user']['id'];
+//                        $users[$answer['user']['usernames']['active_usernames'][0]]['first_name'] = $answer['user']['first_name'];
+//                        $users[$answer['user']['usernames']['active_usernames'][0]]['last_name'] = $answer['user']['last_name'];
+//                        $users[$answer['user']['usernames']['active_usernames'][0]]['phone_number'] = $answer['user']['phone_number'];
+//                    }
+//                }
+                if ($answer['@type'] == 'updateSupergroupFullInfo') {
+                    if ($answer['supergroup_id'] == $test_supergroup) {
+                        $member_count = (int)$answer['supergroup_full_info']['member_count'];
+                    }
+                }
+                if ($answer['@type'] == 'chatMembers') {
+                    foreach ($answer['members'] as $member) {
+                        if ($member['@type'] == 'chatMember') {
+                            $members[] = ['id' => $member['member_id']['user_id'],
+                                'joined_date' => $member['joined_chat_date']];
+                        }
+                    }
+                }
+            }
+            $offset += 200;
+        }
+
+        foreach ($members as &$member){
+            $result = $this->client->send([
+//            '@type' => 'getUserFullInfo',
+                '@type' => 'getUser',
+                'user_id' => $member['id'],
+            ]);
+            foreach ($this->iteratorAnswer() as $answer) {
+                if ($answer['id'] == $member['id']){
+                    $member['first_name'] = $answer['first_name'];
+                    $member['last_name'] = $answer['last_name'];
+                    $member['phone_number'] = $answer['phone_number'];
+                    $member['username'] = $answer['user']['usernames']['active_usernames'][0];
+                }
+            }
+        }
+        $members['count'] = $member_count;
+        return $members;
     }
     private function iteratorAnswer(): iterable{
         while (($iterate = $this->client->receive(2)) != null)

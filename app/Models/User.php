@@ -19,9 +19,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'phone'
     ];
 
     /**
@@ -29,10 +27,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = [];
 
     /**
      * The attributes that should be cast.
@@ -42,9 +37,14 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
+    /**
+     * @var TelegramConnect
+     */
     private TelegramConnect $telegram_client;
 
+    /**
+     * @return bool
+     */
     public function enabledTelegramClient():bool
     {
         if ($this->telegram_client !== null){
@@ -53,11 +53,18 @@ class User extends Authenticatable
         return false;
     }
 
+    /**
+     * @return TelegramConnect
+     */
     public function getTelegramClient():TelegramConnect
     {
         return $this->telegram_client;
     }
 
+    /**
+     * @param TelegramConnect $telegramConnect
+     * @return void
+     */
     public function setTelegramClient(TelegramConnect $telegramConnect):void
     {
         $this->telegram_client = $telegramConnect;

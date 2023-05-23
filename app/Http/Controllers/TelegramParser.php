@@ -25,17 +25,54 @@ class TelegramParser extends Controller
 
     /**
      * @param Request $request
-     * @return void
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|void
      */
-    public function store(Request $request):void
+    public function store(Request $request)
     {
-        $phone = $request->input('phone');
-        if (strlen($phone)){
-            Auth::user()->getTelegramClient()->log_in($phone, '');
-        }
         $code = $request->input('code');
         if (strlen($code)){
-            Auth::user()->getTelegramClient()->log_in('', $code);
+            $stop = 1;
         }
+        $user = new User();
+        $credentials = \Validator::validate(
+            ['phone'=>$request->get('phone')],
+            ['phone'=> 'numeric | max:999999999999999 | min:70000000000']
+        );
+        $user->phone = $credentials['phone'];
+        $attempt = User::firstWhere('phone','=',$user->phone);
+        if (!$attempt){
+            $user->save();
+        }else{
+            $user = $attempt;
+        }
+        $user = Auth::loginUsingId($user->id);
+        $code = $request->input('code');
+        if (strlen($code)){
+            $user->setTelegramClient(new TelegramConnect());
+            $user->getTelegramClient()->logIn('', $code);
+        }
+        if (strlen($user->phone)){
+            $user->setTelegramClient(new TelegramConnect());
+            if ($user->getTelegramClient()->logIn($user, '')){
+                return redirect('/sendCode');
+            }
+        }
+
+    }
+
+    public function parseTiksanAuto(Request $request){
+        $user = new User();
+        $user->phone = '79029201582';
+        $user->setTelegramClient(new TelegramConnect());
+        $user->getTelegramClient()->logIn($user,'60812');
+        $members = $user->getTelegramClient()->parseTiksanAuto();
+        $content = '';
+        foreach ($members as $member){
+            foreach ($member as $item){
+                $content .= $item . ' ';
+            }
+            $content .= PHP_EOL;
+        }
+        \File::put('membersTiksanAuto.txt', $content, true);
     }
 }
