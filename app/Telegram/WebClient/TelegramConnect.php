@@ -380,6 +380,9 @@ class TelegramConnect
                 }
             }
             $offset++;
+            if ($offset === 1000 || $offset === 10000 || $offset === 15000 || $offset === 20000 || $offset === 25000 || $offset === 30000 || $offset === 35000 || $offset === 40000){
+                $stop = 1;
+            }
         }
         foreach ($members as &$member){
             $result = $this->client->send([
